@@ -15,7 +15,7 @@
 #define MAX_CHARS            65536
 
 // Variables
-long long int StartTime;
+unsigned long long int StartTime;
 // For holding a time object
 struct timeval tv;
 // Text buffer
@@ -39,10 +39,15 @@ void Error(const char* format, ...)
 void print(const char* format, ...)
 {
     va_list argpointer;
-    float timeElapsed;
+    unsigned long long int timeElapsed;
+    
+    gettimeofday(&tv, NULL);
+    
+    timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
+    
     va_start(argpointer, format);
     vsnprintf(ScreenText, 255, format, argpointer);
-    printf("%f: %s", timeElapsed, ScreenText);
+    printf("%llu: %s", timeElapsed, ScreenText);
     va_end(argpointer);
 }
 
@@ -109,6 +114,10 @@ int main(int argc, char *argv[])
         // Connection is not via a terminal. Could be a pipe.
         
     }
+    
+    // Note down the start time:
+    gettimeofday(&tv, NULL);
+    StartTime = 1000000LL * tv.tv_sec + tv.tv_usec;
     
     // Now check to see if a filename was defined:
     if (filename[0] == '\0')
