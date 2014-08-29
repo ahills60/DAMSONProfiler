@@ -14,6 +14,13 @@
 // Defines
 #define MAX_CHARS            65536
 
+// Variables
+long long int StartTime;
+// For holding a time object
+struct timeval tv;
+// Text buffer
+char ScreenText[256];
+
 // Prototypes
 void Error(const char* format, ...);
 void print(const char* format, ...);
@@ -43,6 +50,7 @@ int main(int argc, char *argv[])
 {
     char *currObj, *parVal = "", *filename = "\0";
     int i, n, a, isParam;
+    FILE *fp;
     
     printf("\nDAMSON Profiler ");
     printf("Version %i.%i.%i (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD, VERSION_DATE);
@@ -99,6 +107,7 @@ int main(int argc, char *argv[])
     else
     {
         // Connection is not via a terminal. Could be a pipe.
+        
     }
     
     // Now check to see if a filename was defined:
@@ -110,7 +119,17 @@ int main(int argc, char *argv[])
     else
     {
         // Save to file
+        fp = fopen(filename, "w+");
+        if (!fp)
+        {
+            Error("Unable to open file stream to save output.");
+            return -2;
+        }
         
+        // If here, we're able to open the file stream.
+        
+        // Finally close the file stream
+        fclose(fp);
     }
     
     return 0;
