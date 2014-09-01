@@ -17,6 +17,8 @@
 // Variables
 unsigned long long int StartTime;
 unsigned long long int PreviousTime;
+unsigned long long int TimeThreshold;
+int EnableThreshold = 0;
 // For holding a time object
 struct timeval tv;
 // Text buffer
@@ -48,7 +50,8 @@ void print(const char* format, ...)
     
     va_start(argpointer, format);
     vsnprintf(ScreenText, 255, format, argpointer);
-    printf("%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, ScreenText);
+    if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
+        printf("%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, ScreenText);
     PreviousTime = timeElapsed;
     va_end(argpointer);
 }
@@ -94,10 +97,22 @@ int main(int argc, char *argv[])
             {
                 // There was previously a parameter. Determine what was set:
                 if (!strcmp(parVal, "filename"))
+                {
                     filename = currObj;
+                }
                 else
-                    Error("Unrecognised input \"%s\"\n", parVal);
-                
+                {
+                    if (!strcmp(parVal, "timethreshold"))
+                    {
+                        TimeThreshold = atoll(currObj);
+                        // Specifying threshold enables it.
+                        EnableThreshold = 1;
+                    }
+                    else
+                    {
+                        Error("Unrecognised input \"%s\"\n", parVal);
+                    }
+                }
                 parVal = "";
             }
             else // No parameter was defined. Skip to the next argument
@@ -117,7 +132,7 @@ int main(int argc, char *argv[])
     // Firstly, note down the start time:
     gettimeofday(&tv, NULL);
     StartTime = 1000000LL * tv.tv_sec + tv.tv_usec;
-    PreviousTime = StartTime;
+    PreviousTime = 0;
     
     // Now check to see if a filename was defined:
     if (filename[0] == '\0')
@@ -186,8 +201,8 @@ int main(int argc, char *argv[])
                 gettimeofday(&tv, NULL);
                 
                 timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
-                
-                fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
+                if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
+                    fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
                 PreviousTime = timeElapsed;
                 // Reset the pointer and clear the line
                 ptr = 0;
@@ -203,8 +218,8 @@ int main(int argc, char *argv[])
             gettimeofday(&tv, NULL);
             
             timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
-            
-            fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
+            if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
+                fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
             PreviousTime = timeElapsed;
         }
         
