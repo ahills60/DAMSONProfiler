@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
 {
     char *currObj, *parVal = "", *filename = "\0", line[MAX_CHARS], ch;
     int i, n, a, isParam, ptr = 0, tries = 0, c;
+    unsigned long long int timeElapsed;
     FILE *fp;
     
     printf("\nDAMSON Profiler ");
@@ -162,6 +163,45 @@ int main(int argc, char *argv[])
         }
         
         // If here, we're able to open the file stream.
+        
+        while((c = getchar()) && tries < 5)
+        {
+            if (c == EOF)
+            {
+                tries ++;
+                continue;
+            }
+            
+            // Convert int to char
+            ch = (char) c;
+            // Add this character to the buffer
+            line[ptr++] = (char) ch;
+            
+            // Check to see if the buffer should be emptied and the command processed.
+            if (ch == '\0' || ch == '\n')
+            {
+                gettimeofday(&tv, NULL);
+                
+                timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
+                
+                fprintf(fp, "%llu: %s", timeElapsed, line);
+                // Reset the pointer and clear the line
+                ptr = 0;
+                memset(line, 0, MAX_CHARS);
+            }
+        }
+        
+        // Check to see if there are still items within the line buffer. It could be no
+        // newline was declared at the end of the program run.
+        if (ptr > 0)
+        {
+            // Purge the buffer and write to file:
+            gettimeofday(&tv, NULL);
+            
+            timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
+            
+            fprintf(fp, "%llu: %s", timeElapsed, line);
+        }
         
         // Finally close the file stream
         fclose(fp);
