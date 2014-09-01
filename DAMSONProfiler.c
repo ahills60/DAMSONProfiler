@@ -16,6 +16,7 @@
 
 // Variables
 unsigned long long int StartTime;
+unsigned long long int PreviousTime;
 // For holding a time object
 struct timeval tv;
 // Text buffer
@@ -47,7 +48,8 @@ void print(const char* format, ...)
     
     va_start(argpointer, format);
     vsnprintf(ScreenText, 255, format, argpointer);
-    printf("%llu: %s", timeElapsed, ScreenText);
+    printf("%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, ScreenText);
+    PreviousTime = timeElapsed;
     va_end(argpointer);
 }
 
@@ -115,6 +117,7 @@ int main(int argc, char *argv[])
     // Firstly, note down the start time:
     gettimeofday(&tv, NULL);
     StartTime = 1000000LL * tv.tv_sec + tv.tv_usec;
+    PreviousTime = StartTime;
     
     // Now check to see if a filename was defined:
     if (filename[0] == '\0')
@@ -184,7 +187,8 @@ int main(int argc, char *argv[])
                 
                 timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
                 
-                fprintf(fp, "%llu: %s", timeElapsed, line);
+                fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
+                PreviousTime = timeElapsed;
                 // Reset the pointer and clear the line
                 ptr = 0;
                 memset(line, 0, MAX_CHARS);
@@ -200,7 +204,8 @@ int main(int argc, char *argv[])
             
             timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
             
-            fprintf(fp, "%llu: %s", timeElapsed, line);
+            fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
+            PreviousTime = timeElapsed;
         }
         
         // Finally close the file stream
