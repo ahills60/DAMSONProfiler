@@ -53,8 +53,8 @@ void print(const char* format, ...)
 
 int main(int argc, char *argv[])
 {
-    char *currObj, *parVal = "", *filename = "\0";
-    int i, n, a, isParam;
+    char *currObj, *parVal = "", *filename = "\0", line[MAX_CHARS], ch;
+    int i, n, a, isParam, ptr = 0, tries = 0;
     FILE *fp;
     
     printf("\nDAMSON Profiler ");
@@ -109,13 +109,9 @@ int main(int argc, char *argv[])
         Error("Invalid usage. Pipe DAMSON output into profiler.\n\n");
         return -1;
     }
-    else
-    {
-        // Connection is not via a terminal. Could be a pipe.
-        
-    }
+    // If here, connection is via a pipe. This ought to keep things simple.
     
-    // Note down the start time:
+    // Firstly, note down the start time:
     gettimeofday(&tv, NULL);
     StartTime = 1000000LL * tv.tv_sec + tv.tv_usec;
     
@@ -123,7 +119,15 @@ int main(int argc, char *argv[])
     if (filename[0] == '\0')
     {
         // Print to screen
-        
+        memset(line, 0, MAX_CHARS);
+        while((c = getchar()) && tries < 5)
+        {
+            if (c == EOF)
+            {
+                tries ++;
+                continue;
+            }
+        }
     }
     else
     {
