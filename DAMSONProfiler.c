@@ -12,7 +12,7 @@
 #include "DAMSONProfiler.h"
 
 // Defines
-#define MAX_CHARS            65536
+#define MAX_CHARS            256
 
 // Variables
 unsigned long long int StartTime;
@@ -23,6 +23,7 @@ int EnableThreshold = 0;
 struct timeval tv;
 // Text buffer
 char ScreenText[256];
+char PreviousLine[256];
 
 // Prototypes
 void Error(const char* format, ...);
@@ -33,7 +34,7 @@ void Error(const char* format, ...)
 {
     va_list argpointer;
     va_start(argpointer, format);
-    vsnprintf(ScreenText, 255, format, argpointer);
+    vsnprintf(ScreenText, MAX_CHARS, format, argpointer);
     printf("%s", ScreenText);
     va_end(argpointer);
 }
@@ -49,10 +50,11 @@ void print(const char* format, ...)
     timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
     
     va_start(argpointer, format);
-    vsnprintf(ScreenText, 255, format, argpointer);
+    vsnprintf(ScreenText, MAX_CHARS, format, argpointer);
     if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
-        printf("%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, ScreenText);
+        printf("%llu (%llu): %s -> %s\n", timeElapsed, timeElapsed - PreviousTime, PreviousLine, ScreenText);
     PreviousTime = timeElapsed;
+    memcpy(&PreviousLine[0], &ScreenText[0], MAX_CHARS);
     va_end(argpointer);
 }
 
@@ -149,8 +151,6 @@ int main(int argc, char *argv[])
             
             // Convert int to char
             ch = (char) c;
-            // Add this character to the buffer
-            line[ptr++] = (char) ch;
             
             // Check to see if the buffer should be emptied and the command processed.
             if (ch == '\0' || ch == '\n')
@@ -160,6 +160,11 @@ int main(int argc, char *argv[])
                 ptr = 0;
                 memset(line, 0, MAX_CHARS);
             }
+            else
+            {
+                // Add this character to the buffer
+                line[ptr++] = (char) ch;
+            }
         }
         
         // Check to see if there are still items within the line buffer. It could be no
@@ -167,8 +172,10 @@ int main(int argc, char *argv[])
         if (ptr > 0)
         {
             // Purge the buffer and print to screen:
-            print("%s\n", line);
+            print("%s", line);
         }
+        // Finally, a new line
+        printf("\n");
     }
     else
     {
@@ -192,8 +199,6 @@ int main(int argc, char *argv[])
             
             // Convert int to char
             ch = (char) c;
-            // Add this character to the buffer
-            line[ptr++] = (char) ch;
             
             // Check to see if the buffer should be emptied and the command processed.
             if (ch == '\0' || ch == '\n')
@@ -202,11 +207,17 @@ int main(int argc, char *argv[])
                 
                 timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
                 if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
-                    fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
+                    fprintf(fp, "%llu (%llu): %s -> %s\n", timeElapsed, timeElapsed - PreviousTime, PreviousLine, line);
                 PreviousTime = timeElapsed;
+                memcpy(&PreviousLine[0], &line[0], MAX_CHARS);
                 // Reset the pointer and clear the line
                 ptr = 0;
                 memset(line, 0, MAX_CHARS);
+            }
+            else
+            {
+                // Add this character to the buffer
+                line[ptr++] = (char) ch;
             }
         }
         
@@ -219,8 +230,7 @@ int main(int argc, char *argv[])
             
             timeElapsed = 1000000LL * tv.tv_sec + tv.tv_usec - StartTime;
             if (((timeElapsed - PreviousTime > TimeThreshold) && EnableThreshold) || !EnableThreshold)
-                fprintf(fp, "%llu (%llu): %s", timeElapsed, timeElapsed - PreviousTime, line);
-            PreviousTime = timeElapsed;
+                fprintf(fp, "%llu (%llu): %s -> %s\n", timeElapsed, timeElapsed - PreviousTime, PreviousLine, line);
         }
         
         // Finally close the file stream
