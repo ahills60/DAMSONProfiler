@@ -54,7 +54,7 @@ void print(const char* format, ...)
 int main(int argc, char *argv[])
 {
     char *currObj, *parVal = "", *filename = "\0", line[MAX_CHARS], ch;
-    int i, n, a, isParam, ptr = 0, tries = 0;
+    int i, n, a, isParam, ptr = 0, tries = 0, c;
     FILE *fp;
     
     printf("\nDAMSON Profiler ");
@@ -127,6 +127,28 @@ int main(int argc, char *argv[])
                 tries ++;
                 continue;
             }
+            
+            // Convert int to char
+            ch = (char) c;
+            // Add this character to the buffer
+            line[ptr++] = (char) ch;
+            
+            // Check to see if the buffer should be emptied and the command processed.
+            if (ch == '\0' || ch == '\n')
+            {
+                print("%s", line);
+                // Reset the pointer and clear the line
+                ptr = 0;
+                memset(line, 0, MAX_CHARS);
+            }
+        }
+        
+        // Check to see if there are still items within the line buffer. It could be no
+        // newline was declared at the end of the program run.
+        if (ptr > 0)
+        {
+            // Purge the buffer and print to screen:
+            print("%s\n", line);
         }
     }
     else
